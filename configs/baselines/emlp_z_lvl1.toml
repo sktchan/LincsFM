@@ -1,0 +1,10 @@
+# tapered relu MLP on z-scored expression, sweep zhkn9kmk best
+model = "emlp"
+level = "lvl1"
+standardize = true
+clip = 10
+lr = 4.7367e-5
+drop_prob = 0.08279
+n_layers = 2
+mlp_hidden_dim = 0
+max_steps = 40000

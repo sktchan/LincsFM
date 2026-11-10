@@ -1,0 +1,3 @@
+# shrinkage LDA on rank features, shrinkage picked on val
+model = "rlda"
+level = "lvl2"

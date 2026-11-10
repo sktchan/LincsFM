@@ -1,0 +1,12 @@
+# pretrained encoder (set ckpt=<pretrain run>/final), ETF: raw input, head_init
+input = "etf"
+mode = "pretrained"
+head_init = true
+init_seed = 0
+level = "lvl2"
+lr = 0.00012
+drop_prob = 0.18
+gene_lr_mult = 978.0
+max_steps = 20000
+micro_bs = 0
+pool = "mean"

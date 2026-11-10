@@ -1,0 +1,13 @@
+# random encoder (set ckpt=<pretrain run>/final), RTF: no head_init (random RTF pooled features are near constant)
+input = "rtf"
+mode = "random"
+head_init = false
+init_seed = 0
+level = "lvl2"
+lr = 0.00012
+drop_prob = 0.18
+gene_lr_mult = 978.0
+rank_lr_mult = 978.0
+max_steps = 20000
+micro_bs = 0
+pool = "mean"

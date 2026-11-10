@@ -1,0 +1,5 @@
+# logistic regression on rank features, fixed length, best val checkpoint
+model = "rlog"
+level = "lvl2"
+lr = 0.001
+max_steps = 200000

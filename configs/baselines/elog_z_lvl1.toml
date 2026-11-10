@@ -1,0 +1,7 @@
+# logistic regression on per-gene z-scored expression (clip +-10), hard-coded lr as the old elog.jl
+model = "elog"
+level = "lvl1"
+standardize = true
+clip = 10
+lr = 0.001
+max_steps = 40000

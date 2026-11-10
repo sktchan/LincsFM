@@ -1,0 +1,44 @@
+# random search over lr, dropout, depth and width of the rmlp baseline on lvl2
+# launch from thesis/lincs: slurm/sweep.sh configs/sweeps/bl_rmlp_lvl2.yaml 2 tty
+program: scripts/baseline.jl
+project: lincs-sweeps
+name: bl_rmlp_lvl2
+method: random
+metric:
+  name: best_val_acc
+  goal: maximize
+parameters:
+  wandb_project:
+    value: lincs-sweeps
+  level:
+    value: lvl2
+  save_model:
+    value: false
+  max_steps:
+    value: 10000
+  eval_every:
+    value: 500
+  lr:
+    distribution: log_uniform_values
+    min: 0.000001
+    max: 0.01
+  drop_prob:
+    distribution: uniform
+    min: 0.01
+    max: 0.3
+  n_layers:
+    values: [1, 2, 3, 4, 5, 6, 7, 8]
+  mlp_hidden_dim:
+    values: [256, 512, 1024, 2048, 4096, 8192, 16384]
+run_cap: 25
+early_terminate:
+  type: hyperband
+  min_iter: 3
+  eta: 3
+command:
+  - ${env}
+  - bash
+  - slurm/sweep_run.sh
+  - ${program}
+  - configs/baselines/rmlp_lvl2.toml
+  - ${args_no_hyphens}

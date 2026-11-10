@@ -1,0 +1,5 @@
+# shrinkage LDA on z-scored expression (clip +-10), shrinkage picked on val
+model = "elda"
+level = "lvl2"
+standardize = true
+clip = 10

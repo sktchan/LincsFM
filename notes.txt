@@ -1,0 +1,88 @@
+-----------------------------------------------------------------------------------------------------------
+
+### nov 10 2026 ###
+
+-- what changed from the old code:
+    -- no-pt tf:
+        -- x978 lr
+            -- prev: mean pooling before classification results in each gene's parameters moving the vector by 1/978 of an update
+                -- since adam takes lr sized steps however small the update is then cannot learn
+            -- ×978 lr on the per-gene parameters: applies to the gene embedding and the per-gene value weights
+        -- ETF standardized
+            -- adds z-scored value x vector to token
+        -- RTF uses rank-value table
+            -- scaled rank (G+1-r)/G x vector to token
+    -- erecon:
+        -- uses zmask: 30% of values hidden, z-scored target, tok_norm init
+        -- RTF was hiding gene itself and the value;
+        -- changed to hiding the value of 30% of genes, with target z-scored per-gene
+        -- tok-norm: scales gene table and mask vector to norm 1; initializing the etf projection on standaridized x
+    -- lrecon:
+        -- value hidden for both inputs, double-normalized layer-avg target, cosine loss, decay=0.9995, tok_norm init
+        -- target: avg of all teacher layers, centered per sample, then z-scored over the batch per feature and per gene
+    -- w-pt finetune:
+        -- ETF: tok-z + head init
+            -- tok-z: encoder input is raw, but 
+            -- head init: pretrained pooled vectors gives huge starting logits, thus needs rescaling first head layer
+        -- RTF: no head_init
+            -- head init amplifies the noise of identical pooled vectors
+    -- controls:
+        -- T0: no pretraining
+        -- T1: random weights through same pre-trained path
+        -- T0 is legit from scratch while T1 builds the same init scheme as the pre-training runs
+    -- frozen probes:
+        -- shrinkage LDA probes
+            -- prev: swept linear and mlp probes but this was expensive and depended on the probe's tuning
+            -- here, this is a closed form linear classifier with no training and no tuning
+            -- runs on mean pooled layer 2 of frozen encoder
+            -- reports drug, drug after removing cell line means, and cell line
+    -- statistics:
+        -- paired boostrap by drug cluster, seed spread
+    -- hardware:
+        -- MiG for sweeps/pre-train, GH200 for finals
+    -- downstream:
+        -- lvl2 headline, lvl1=10k-step, 1 seed check
+    -- pretrains:
+        -- changed to lr grid of 3 optiosn at 5k steps;
+        -- dropout didn't really matter and val loss here doesn't reflect downstream accuracy anyways
+
+-- re-run: (pretty much everything)
+    -- no-pt tfs
+    -- pre-training
+    -- lvl2s
+    -- lvl1s
+
+-- running:
+    -- tests for how long each needs to run before learning
+    -- tests for etf input; 
+        -- don't want to actually add a token in addition to the embeddings for w-pt
+            -- currently, val_emb is trained from the finetuning labels w/ x978 learning rate
+        -- seeing if possible to have baselines input z scored exp AND tf input z scored exp
+
+-- rn:
+    -- why are the configs diff? can we consolidate or no?
+        -- pending runs being done
+            -- per-arm files over a shared base + sweep template
+    -- fix lincs to the correct # labels
+        -- done
+    -- fix lincs data prep to same as before kinda
+        -- done
+    -- scripts are not rly scripts aka maybe no need for all the .sh files?
+        -- pending runs being done
+    -- mlp and logreg architecture needs re-sweep
+        -- pending confirmation of inputs
+    -- housekeeping
+        -- clean all of the results and logs
+        -- new wandb needed?
+        -- no need for health, etc.?
+
+-- later:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests
+
+-- on hold:
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue

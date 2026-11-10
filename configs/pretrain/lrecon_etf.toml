@@ -1,0 +1,10 @@
+# repaired lrecon: value hidden for 15% of genes, EMA teacher, layer-averaged targets, cosine loss, tok_norm init
+input = "etf"
+objective = "lrecon"
+lr = 0.0012
+drop_prob = 0.11
+mask_ratio = 0.15
+ema_decay = 0.9995
+max_steps = 40000
+eval_every = 1000
+max_val_samples = 5000

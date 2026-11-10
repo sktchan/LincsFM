@@ -1,0 +1,7 @@
+# logistic regression on per-gene z-scored expression (clip +-10), fixed length, best val checkpoint
+model = "elog"
+level = "lvl2"
+standardize = true
+clip = 10
+lr = 0.001
+max_steps = 200000

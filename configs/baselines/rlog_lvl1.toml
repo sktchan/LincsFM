@@ -1,0 +1,5 @@
+# logistic regression on rank features
+model = "rlog"
+level = "lvl1"
+lr = 0.001
+max_steps = 40000

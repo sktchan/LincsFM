@@ -1,0 +1,8 @@
+# large / generated: prepared data, run outputs, slurm logs, wandb files
+data/
+results/
+logs/
+wandb/
+slurm/
+*.jld2
+*.sh

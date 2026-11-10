@@ -1,0 +1,9 @@
+# mlm as in the original runs (lincs.toml hps)
+input = "etf"
+objective = "mlm"
+lr = 0.012
+drop_prob = 0.013
+mask_ratio = 0.15
+max_steps = 40000
+eval_every = 1000
+max_val_samples = 5000
