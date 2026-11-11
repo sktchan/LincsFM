@@ -1,6 +1,4 @@
-# lrecon (repaired): hide the value of a fraction of genes (gene kept); an EMA teacher sees the clean sample;
-# target = mean over layers h0..hL of the teacher states, each centred per sample and z-scored over the batch per (feature, gene);
-# the student predicts the target of each hidden token through a decoder, cosine loss
+# lrecon: hide values of a fraction of genes; predict an EMA teacher's normalized, layer-averaged states of those tokens (cosine loss)
 
 struct LRecon <: Objective
     mask_ratio::Float64

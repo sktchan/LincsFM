@@ -4,5 +4,7 @@ results/
 logs/
 wandb/
 slurm/
+test/
 *.jld2
 *.sh
+*.md

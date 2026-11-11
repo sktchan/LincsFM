@@ -1,5 +1,4 @@
-# end-to-end finetuning on lvl1 (cell line) or lvl2 (drug)
-# mode: "scratch" (no pretraining, T0), "pretrained" (load a pretrain checkpoint, T2), "random" (same arch and init scheme, random weights, T1)
+# end-to-end finetuning on lvl1 (cell line) or lvl2 (drug); mode scratch (T0), random (T1) or pretrained (T2)
 
 function finetune(cfg::Dict; data::Union{Nothing,LincsData} = nothing)
     set_math!(cfg)

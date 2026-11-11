@@ -1,7 +1,7 @@
-# CPU unit tests (no GPU): julia --threads=1,0 test/runtests.jl [nodata]  (nodata skips the tests on data/lincs.jld2)
+# CPU unit tests
 ENV["CUDA_VISIBLE_DEVICES"] = ""
-include(joinpath(@__DIR__, "..", "scripts", "setup.jl"))
-using Test, Random, Statistics, LinearAlgebra, Flux
+using Pkg; Pkg.activate(joinpath(dirname(@__DIR__), "env", Sys.ARCH == :aarch64 ? "aarch64" : "x86_64"); io=devnull)
+using LincsFM, Test, Random, Statistics, LinearAlgebra, Flux
 const M = LincsFM
 const t_start = time()
 
@@ -27,6 +27,20 @@ tiny_encoder(input; G=40, D=16, seed=1) = (Random.seed!(seed); M.Encoder(input; 
     @test o["lr"] === 0.001 && o["seed"] === 3 && o["head_init"] === true && o["input"] == "rtf" && o["ckpt"] == "/a/b=c"
     cfg = M.load_config(joinpath(M.PKG_DIR, "configs", "finetune", "scratch_rtf.toml"), o)
     @test cfg["lr"] == 0.001 && cfg["input"] == "rtf" && cfg["embed_dim"] == 128
+    # base.toml keys come in under the arm's own keys, and base itself is dropped
+    @test cfg["max_steps"] == 20000 && cfg["rank_lr_mult"] == 978.0 && !haskey(cfg, "base")
+    @test M.load_config(joinpath(M.PKG_DIR, "configs", "pretrain", "mlm_rtf.toml"))["max_val_samples"] == 5000
+    # wandb sweeps pass True / False
+    @test M.parse_overrides(["a=True", "b=False"]) == Dict("a" => true, "b" => false)
+    # ckpt=@name reads <results_dir>/ckpt/name
+    mktempdir() do r
+        mkpath(joinpath(r, "ckpt")); write(joinpath(r, "ckpt", "run1"), "/some/run/final\n")
+        @test M.load_config(nothing, Dict{String,Any}("results_dir" => r, "ckpt" => "@run1"))["ckpt"] === "/some/run/final"
+        @test_throws ErrorException M.load_config(nothing, Dict{String,Any}("results_dir" => r, "ckpt" => "@missing"))
+    end
+    # cli_config: optional config file then key=value
+    @test M.cli_config(["ckpt=/a", "nh=10"])["nh"] == 10
+    @test M.cli_config([joinpath(M.PKG_DIR, "configs", "finetune", "scratch_etf.toml"), "seed=4"])["seed"] == 4
 end
 
 @testset "gene_ranks and rank_features" begin
@@ -172,11 +186,14 @@ end
 @testset "classifier forward" begin
     G, B, C = 40, 5, 7
     X = rand(MersenneTwister(7), Float32, G, B) .* 8; med = fill(4f0, G)
-    for input in (M.ETF(), M.RTF()), pool in (:mean, :attn)
+    for input in (M.ETF(), M.RTF()), pool in (:mean, :attn, :cls, :max)
         m = M.Classifier(tiny_encoder(input; G), C; hidden_dim=16, pool)
         x = M.encode_input(input, X, med)
         y = m(x)
         @test size(y) == (C, B) && all(isfinite, y)
+        g = Flux.gradient(mm -> sum(mm(x)), m)[1]
+        @test all(isfinite, g.encoder.gene.weight)
+        pool == :cls && @test any(!iszero, g.pool.vec)
     end
 end
 
@@ -257,7 +274,7 @@ if !("nodata" in ARGS)
         for (sc, per_gene) in (("gene", true), ("global", false))
             Xtr, _, _ = M.finetune_inputs(Dict{String,Any}("input" => "etf", "etf_scale" => sc), d, idx, sp)
             mg = vec(mean(Xtr; dims=2))
-            @test abs(mean(Xtr)) < 0.1 && abs(std(Xtr) - 1) < 0.1 && (maximum(abs, mg) < 0.1) == per_gene
+            @test abs(mean(Xtr)) < 0.1 && abs(std(Xtr) - 1) < 0.1 && (median(abs.(mg)) < 0.2) == per_gene   # stats from the pretrain train split
         end
         Xr, _, _ = M.finetune_inputs(Dict{String,Any}("input" => "etf", "etf_scale" => "raw"), d, idx, sp)
         @test Xr == d.X[:, idx[sp.train]]

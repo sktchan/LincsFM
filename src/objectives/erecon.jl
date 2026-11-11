@@ -1,5 +1,4 @@
-# erecon (masked expression reconstruction): hide the value of a fraction of genes (gene kept), predict their per-gene z-scored expression with a token regressor
-# same hidden genes and the same target for ETF and RTF
+# erecon: hide the value of a fraction of genes and predict their per-gene z-scored expression (same masks and targets for ETF and RTF)
 
 struct ERecon <: Objective
     mask_ratio::Float64

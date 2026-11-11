@@ -1,5 +1,4 @@
-# health checks of a pretrained encoder vs its own init/ checkpoint: pooled / token sd, variance shares of h_L, weight change, pretext vs trivial
-# subset: nh samples of the pretrain val split (bad plates dropped), MersenneTwister(3); one row per call in <results_dir>/health.tsv
+# health checks of a pretrained encoder against its init checkpoint: activation spread, variance shares, weight change, pretext vs trivial
 
 # flat Float64 vector of all trainable arrays
 _flat(m) = (l = [vec(Float64.(Array(x))) for x in Flux.trainables(m)]; isempty(l) ? Float64[] : reduce(vcat, l))

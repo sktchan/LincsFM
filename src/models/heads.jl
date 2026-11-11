@@ -22,3 +22,14 @@ function (p::AttnPool)(h)
 end
 
 meanpool(h) = dropdims(mean(h, dims=2), dims=2)
+
+# max pooling over tokens (BulkFormer, scFoundation)
+struct MaxPool end
+(::MaxPool)(h) = dropdims(maximum(h, dims=2), dims=2)
+
+# CLS readout: a learned token prepended to the gene tokens; its encoder output is the sample vector
+struct ClsToken{V<:AbstractVector}
+    vec::V
+end
+Flux.@layer ClsToken
+ClsToken(d::Int; seed::Int = 1) = ClsToken(randn(MersenneTwister(seed + 3001), Float32, d) .* 0.02f0)

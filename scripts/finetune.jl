@@ -1,4 +1,4 @@
-# usage: julia scripts/finetune.jl <config.toml> [key=value ...]  (pretrained / random modes need ckpt=<pretrain run>/final)
-include(joinpath(@__DIR__, "setup.jl"))
-cfg = LincsFM.load_config(ARGS[1], LincsFM.parse_overrides(ARGS[2:end]))
-LincsFM.finetune(cfg)
+# finetune a transformer classifier from a config
+using Pkg; Pkg.activate(joinpath(dirname(@__DIR__), "env", Sys.ARCH == :aarch64 ? "aarch64" : "x86_64"); io=devnull)
+using LincsFM
+finetune(LincsFM.cli_config(ARGS))

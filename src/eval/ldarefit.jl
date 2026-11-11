@@ -1,5 +1,4 @@
-# LDA refit on the pooled head input and on the head hidden layer of a finetuned Classifier (final and best), vs the model's own head
-# fit on train (all, or a class-stratified subsample with ntr > 0), alpha on val, report test; preds in <run>/ldarefit_<ckpt>.jld2
+# LDA refit on a finetuned classifier's pooled features and head hidden layer, compared with its own head
 
 # rebuild a Classifier skeleton from its saved state (arch read from the arrays and nheads)
 function classifier_from_state(st, input::Input, norm::AbstractString)
@@ -8,7 +7,7 @@ function classifier_from_state(st, input::Input, norm::AbstractString)
     enc = Encoder(input; n_genes=G, embed_dim=D, hidden_dim=size(l1.mlp.layers[1].weight, 1), n_heads=l1.mha.nheads,
                   n_layers=length(se.layers.layers), norm)
     m = Classifier(enc, size(st.head.layers[end].weight, 1); hidden_dim=size(st.head.layers[1].weight, 1),
-                   pool=st.pool isa NamedTuple ? :attn : :mean)
+                   pool=st.pool isa NamedTuple ? (haskey(st.pool, :vec) ? :cls : :attn) : st.pool == () ? :max : :mean)
     Flux.loadmodel!(m, st)
     return m
 end

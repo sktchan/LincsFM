@@ -1,9 +1,7 @@
-# erecon: value hidden for 30% of genes, z-scored expression target, tok_norm init
+# erecon: value hidden for 30% of genes, z-scored expression target
+base = "base.toml"
 input = "rtf"
 objective = "erecon"
 lr = 0.003
 drop_prob = 0.1
 mask_ratio = 0.3
-max_steps = 40000
-eval_every = 1000
-max_val_samples = 5000

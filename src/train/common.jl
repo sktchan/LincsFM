@@ -1,17 +1,26 @@
 # config, schedules and run directories shared by pretraining and finetuning
 
 const DEFAULTS = Dict{String,Any}(
-    "embed_dim" => 128, "hidden_dim" => 128, "n_heads" => 2, "n_layers" => 2, "norm" => "pre", "etf_scale" => "raw",
+    "embed_dim" => 128, "hidden_dim" => 128, "n_heads" => 2, "n_layers" => 2, "norm" => "pre", "etf_scale" => "gene",
     "batch_size" => 100, "seed" => 1, "wandb_project" => "", "wandb_group" => "", "results_dir" => joinpath(PKG_DIR, "results"),
     "data_path" => joinpath(PKG_DIR, "data", "lincs.jld2"))
 
-# config = defaults < toml file < overrides (key = value pairs)
+# toml file merged over its base = "<file>" (path relative to the file), if set
+function read_toml(path::AbstractString)
+    t = TOML.parsefile(path)
+    b = pop!(t, "base", nothing)
+    return isnothing(b) ? t : merge(read_toml(joinpath(dirname(path), b)), t)
+end
+
+# config = defaults < base toml < toml file < overrides (key = value pairs)
 function load_config(path::Union{Nothing,AbstractString} = nothing, overrides::AbstractDict = Dict{String,Any}(); kw...)
     cfg = copy(DEFAULTS)
-    isnothing(path) || merge!(cfg, TOML.parsefile(path))
+    isnothing(path) || merge!(cfg, read_toml(path))
     for (k, v) in Iterators.flatten((overrides, kw))
         cfg[string(k)] = v
     end
+    ck = get(cfg, "ckpt", nothing)
+    ck isa AbstractString && startswith(ck, "@") && (cfg["ckpt"] = resolve_ckpt(ck[2:end], cfg["results_dir"]))
     return cfg
 end
 
@@ -20,9 +29,25 @@ function parse_overrides(args)
     out = Dict{String,Any}()
     for a in args
         k, v = split(a, "="; limit=2)
-        out[k] = something(tryparse(Int, v), tryparse(Float64, v), v == "true" ? true : v == "false" ? false : String(v))
+        b = lowercase(v)
+        out[k] = something(tryparse(Int, v), tryparse(Float64, v), b == "true" ? true : b == "false" ? false : String(v))
     end
     return out
+end
+
+# script config from the command line: [<config.toml>] key=value ...; prints the trial line under a wandb sweep agent
+function cli_config(args)
+    haskey(ENV, "WANDB_SWEEP_ID") && println("sweep trial $(ENV["WANDB_SWEEP_ID"]) run $(get(ENV, "WANDB_RUN_ID", "?")) | $(join(args, ' '))")
+    file = !isempty(args) && !occursin('=', args[1])
+    return load_config(file ? args[1] : nothing, parse_overrides(file ? args[2:end] : args))
+end
+
+# checkpoint pointers: <results_dir>/ckpt/<name> holds the final checkpoint of a finished pretrain run (ckpt=@name)
+ckpt_pointer(results_dir, name) = joinpath(results_dir, "ckpt", name)
+function resolve_ckpt(name::AbstractString, results_dir::AbstractString)
+    f = ckpt_pointer(results_dir, name)
+    isfile(f) || error("no checkpoint pointer $f (written when pretrain run $name finishes)")
+    return String(strip(read(f, String)))
 end
 
 # linear warmup then cosine to 0

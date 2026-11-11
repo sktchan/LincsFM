@@ -1,5 +1,4 @@
-# mlm (as in the original runs): ETF hides the value and predicts the gene's rank (G classes);
-# RTF hides the gene and keeps its rank, and predicts which gene it is (G classes)
+# mlm: ETF hides the value and predicts the gene's rank; RTF hides the gene and predicts which gene it is
 
 struct MLM <: Objective
     mask_ratio::Float64

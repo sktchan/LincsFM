@@ -1,0 +1,4 @@
+# shared by every pretrain arm
+max_steps = 40000
+eval_every = 1000
+max_val_samples = 5000

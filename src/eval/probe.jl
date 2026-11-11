@@ -1,6 +1,4 @@
-# frozen probe of an encoder: mean-pooled h0 / h1 / h2 and h2 token sd -> shrinkage LDA on lvl2 (drug, drug after cell-line centring, cell line)
-# ckpt = <pretrain run>/<init|best|final|final_student>, "random[:seed]" (default arch and init) or "input" (input = etf z / rtf rank / raw reference)
-# sets: lvl2 train subsample (MersenneTwister(1)), val subsample (MersenneTwister(2)) for alpha, full lvl2 test; columns in that order
+# frozen encoder probe: shrinkage LDA on mean-pooled layer states for drug, drug after cell-line centring, and cell line
 
 const PROBE_COLS = ["drug_h2", "drug_clc_h2", "drug_meanstd", "cell_h2", "drug_all", "drug_clc_all", "cell_all", "drug_h0", "drug_h1"]
 

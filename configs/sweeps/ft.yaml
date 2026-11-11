@@ -1,8 +1,7 @@
-# random search over lr and drop_prob, scratch rtf transformer finetune on lvl2 (40k steps, 20 trials, eval every 1000)
-# launch from thesis/lincs: slurm/sweep.sh configs/sweeps/ft_scratch_rtf_lvl2.yaml 2 mig
+# finetune random search over lr and drop_prob; filled in by scripts/sweep.jl
 program: scripts/finetune.jl
 project: lincs-sweeps
-name: ft_scratch_rtf_lvl2
+name: ${NAME}
 method: random
 metric:
   name: best_val_acc
@@ -11,9 +10,9 @@ parameters:
   wandb_project:
     value: lincs-sweeps
   level:
-    value: lvl2
+    value: ${LEVEL}
   max_steps:
-    value: 40000
+    value: ${MAX_STEPS}
   eval_every:
     value: 1000
   lr:
@@ -24,6 +23,7 @@ parameters:
     distribution: uniform
     min: 0.0
     max: 0.3
+${FIXED}
 run_cap: 20
 early_terminate:
   type: hyperband
@@ -31,8 +31,8 @@ early_terminate:
   eta: 3
 command:
   - ${env}
-  - bash
-  - slurm/sweep_run.sh
+  - julia
+  - --threads=1,0
   - ${program}
-  - configs/finetune/scratch_rtf.toml
+  - ${CONFIG}
   - ${args_no_hyphens}

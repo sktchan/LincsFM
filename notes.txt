@@ -58,15 +58,14 @@
         -- don't want to actually add a token in addition to the embeddings for w-pt
             -- currently, val_emb is trained from the finetuning labels w/ x978 learning rate
         -- seeing if possible to have baselines input z scored exp AND tf input z scored exp
+    -- tests for pre/post LN vs head-init
 
 -- rn:
     -- why are the configs diff? can we consolidate or no?
         -- pending runs being done
             -- per-arm files over a shared base + sweep template
-    -- fix lincs to the correct # labels
-        -- done
-    -- fix lincs data prep to same as before kinda
-        -- done
+    -- DONE fix lincs to the correct # labels
+    -- DONE fix lincs data prep to same as before kinda
     -- scripts are not rly scripts aka maybe no need for all the .sh files?
         -- pending runs being done
     -- mlp and logreg architecture needs re-sweep
@@ -74,6 +73,7 @@
     -- housekeeping
         -- clean all of the results and logs
         -- new wandb needed?
+            -- ensure only on for necessary sweeps and final runs for dashboard, separate projects
         -- no need for health, etc.?
 
 -- later:
@@ -82,7 +82,66 @@
     -- ablations
         -- one arm scaled up architecture
     -- lvl3 tests
+    -- once tahoe is setup, can clean the results/ in transformers/ etc.
 
 -- on hold:
     -- T1: honestly not sure if we need
     -- LDA probe: much later issue
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 11 2026 ###
+
+-- running:
+    -- how long each needs to run before learning?
+    -- etf input
+        -- RUNNING mean pooling fix:
+            -- adding W*x/G into the pooled vector fixes scale but adds a linear model onto the raw input
+            -- main issue for mean pooling is that in LINCS, every sample has all 978 genes in the same order
+                -- with a fixed panel, the mean of the input tokens is constant, so mean pooling has no information
+                -- this is only true at the input; after the first nonlinear layer then mean does differ between samples
+            -- testing:
+                -- x10 lr
+                    -- this sets the embeddings at 10x the lr, layers are at 1x the lr
+                    -- would need a sweep of the multiplier as well
+                -- attention pooling
+                    -- theoreticallly should be best
+                    -- also does worse
+                -- cls token
+                    -- theoretically should be mid
+                    -- does way worse
+        -- DONE input scaling
+            -- A uses 1 stddev and 1 mean per gene; fixed rescaling of each gene
+            -- B uses global stddev and global mean
+            -- A is probably the most fair comparison; L1000 work usually does per gene z scoring beforehand
+            -- thus A used for both transformers and baselines
+    -- DONE tests for pre/post LN vs head-init
+        -- doing a pre LN then a final LN for pre-training, this is standard for ESM2 and is proven
+        -- thus no tok-z; we have tok-norm for erecon and z-targets for lrecon tho
+    -- RUNNING mlp and logreg architecture re-sweep
+
+-- organizing:
+    -- DONE consolidating per-arm config files over a shared base + sweep template
+        -- left baselines alone because they are all pretty different
+    -- DONE reformatted scripts into actual scripts, no need for all the .sh files
+    -- DONE updated sweep budgets; 
+        -- n=20 x 40k steps for lvl2, 
+        -- n=20 x 10k steps for lvl1
+    -- housekeeping
+        -- clean all of the results and logs
+        -- new wandb needed?
+            -- ensure only on for necessary sweeps and final runs for dashboard, separate projects
+        -- no need for health, etc.?
+
+-- later:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests
+    -- once tahoe is setup, can clean the results/ in transformers/ etc.
+
+-- on hold:
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping

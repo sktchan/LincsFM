@@ -1,15 +1,8 @@
-# builds data/lincs.jld2 from the LINCS 2020 files; usage: julia --threads=8 scripts/prepare_data.jl [raw_dir=...] [cache=...] [out=...]
-# download into raw_dir:
-#      wget https://s3.amazonaws.com/macchiato.clue.io/builds/LINCS2020/level3/level3_beta_all_n3026460x12328.gctx
-#      wget https://s3.amazonaws.com/macchiato.clue.io/builds/LINCS2020/cellinfo_beta.txt
-#      wget https://s3.amazonaws.com/macchiato.clue.io/builds/LINCS2020/compoundinfo_beta.txt
-#      wget https://s3.amazonaws.com/macchiato.clue.io/builds/LINCS2020/geneinfo_beta.txt
-#      wget https://s3.amazonaws.com/macchiato.clue.io/builds/LINCS2020/instinfo_beta.txt
+# builds data/lincs.jld2 from the LINCS 2020 release files
 
 using Pkg
 Pkg.activate(joinpath(dirname(@__DIR__), "env", Sys.ARCH == :aarch64 ? "aarch64" : "x86_64"); io=devnull)
-using LincsProject, DataFrames, JLD2, Random, Statistics
-include(joinpath(dirname(@__DIR__), "src", "LincsFM.jl"))
+using LincsProject, DataFrames, JLD2, Random, Statistics, LincsFM
 
 const LINCS_DATA = "/home/golem/scratch/chans/lincs/data"
 opts = Dict(String(k) => String(v) for (k, v) in (split(a, "="; limit=2) for a in ARGS))

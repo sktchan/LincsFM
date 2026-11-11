@@ -1,5 +1,4 @@
-# main table: test accuracy (final / best-val model) per arm and level, mean ± sd over seeds, from results/finetune.tsv (transformers + baselines) and results/trivial.tsv
-# usage: julia analysis/collect.jl [results_dir=results] [out=<results_dir>/main_table.tsv]  (stdlib only)
+# main results table: mean ± sd test accuracy per arm and level
 using Statistics, Printf
 
 const LINCS = dirname(@__DIR__)

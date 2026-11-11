@@ -1,5 +1,4 @@
 # pretraining loop for every objective and input
-# required cfg keys: input, objective, lr, drop_prob, mask_ratio, max_steps; lrecon also ema_decay
 
 function pretrain(cfg::Dict; data::Union{Nothing,LincsData} = nothing)
     set_math!(cfg)
@@ -31,6 +30,7 @@ function pretrain(cfg::Dict; data::Union{Nothing,LincsData} = nothing)
 
     name = "$(cfg["objective"])_$(cfg["input"])"
     dir = run_dir(cfg, "pretrain", get(cfg, "run_name", name))
+    cfg = merge(cfg, Dict("wandb_name" => "$(get(cfg, "run_name", name))_s$(seed)"))
     extra = Dict{String,Any}("n_genes" => G, "init_scheme" => string(scheme), "x_mean" => x_mean, "x_sd" => x_sd,
                              "git" => git_hash(), "gpu" => gpu_name())
     save_checkpoint(joinpath(dir, "init"), enc, cfg; heads, extra)
@@ -115,9 +115,29 @@ function pretrain(cfg::Dict; data::Union{Nothing,LincsData} = nothing)
     save_checkpoint(joinpath(dir, "final"), _ckpt_encoder(model, teacher), cfg; heads=model.heads,
                     extra=merge(extra, Dict("step" => step, "s_per_step" => (time() - t0) / max(step, 1))))
     isnothing(teacher) || save_checkpoint(joinpath(dir, "final_student"), model.encoder, cfg; heads=model.heads, extra=extra)
+    final = joinpath(dir, "final")
+    @printf("done %s: best val %.4f (trivial %.4f), %.3f s/step, final ckpt %s\n", name, best, triv, (time() - t0) / max(step, 1), final)
+    rname = get(cfg, "run_name", name) * (seed == 1 ? "" : "_s$seed")
+    ptr = ckpt_pointer(cfg["results_dir"], rname); mkpath(dirname(ptr)); write(ptr, final)
+    println("checkpoint pointer $ptr (ckpt=@$rname)")
+    model = nothing; teacher = nothing; opt = nothing; GC.gc(); CUDA.functional() && CUDA.reclaim()
+    post_eval(cfg, final, "$(get(cfg, "run_name", name))_s$seed", d)
     close_log!(log)
-    @printf("done %s: best val %.4f (trivial %.4f), %.3f s/step, final ckpt %s\n", name, best, triv, (time() - t0) / max(step, 1), joinpath(dir, "final"))
-    return joinpath(dir, "final")
+    return final
+end
+
+# frozen lvl2 probe and health check of a finished pretrain checkpoint (cfg probe / health = false skips); failures only warn
+function post_eval(cfg::Dict, ck::AbstractString, name::AbstractString, d::LincsData)
+    for (key, f) in (("probe", run_probe), ("health", run_health))
+        get(cfg, key, true) || continue
+        try
+            row = f(merge(cfg, Dict{String,Any}("ckpt" => ck, "name" => name)); data=d)
+            key == "probe" && log_wandb(cfg, Dict("probe_drug_h2" => row.drug_h2_test, "probe_drug_clc_h2" => row.drug_clc_h2_test, "probe_cell_h2" => row.cell_h2_test))
+            key == "health" && log_wandb(cfg, Dict("health_verdict" => row.verdict))
+        catch e
+            @warn "$key failed for $ck" exception=(e, catch_backtrace())
+        end
+    end
 end
 
 # the encoder that downstream uses: the EMA teacher for objectives with a teacher, else the student

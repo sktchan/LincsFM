@@ -1,8 +1,7 @@
-# usage: julia scripts/bootstrap.jl <out_prefix> name=<source> ... [--contrast A:B[:pt]] ... [--did A:B:C:D[:pt]] ... [--seed_gap g] [--all_pairs 1] [--B 2000]
-# source = finetune run dir (preds_final), <dir>#best, or <file.jld2>#key (e.g. <run>/ldarefit_final.jld2#preds_pool)
-# a relative out_prefix goes under results/bootstrap/; writes <out_prefix>_arms.tsv and <out_prefix>_contrasts.tsv
-include(joinpath(@__DIR__, "setup.jl"))
-out = isabspath(ARGS[1]) ? ARGS[1] : joinpath(LINCS_DIR, "results", "bootstrap", ARGS[1])
+# paired bootstrap comparison of finished runs
+using Pkg; Pkg.activate(joinpath(dirname(@__DIR__), "env", Sys.ARCH == :aarch64 ? "aarch64" : "x86_64"); io=devnull)
+using LincsFM
+out = isabspath(ARGS[1]) ? ARGS[1] : joinpath(LincsFM.PKG_DIR, "results", "bootstrap", ARGS[1])
 arms = Pair{String,String}[]; contrasts = Tuple{Vector{String},Bool}[]; seed_gap = 0.0; all_pairs = false; B = 2000
 i = 2
 while i <= length(ARGS)

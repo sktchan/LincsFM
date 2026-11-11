@@ -1,8 +1,7 @@
-# random search over lr, dropout, depth and width of the z-scored emlp baseline on lvl1
-# launch from thesis/lincs: slurm/sweep.sh configs/sweeps/bl_emlp_lvl1.yaml 2 tty
+# mlp baseline random search over lr, dropout, depth and width; filled in by scripts/sweep.jl
 program: scripts/baseline.jl
 project: lincs-sweeps
-name: bl_emlp_lvl1
+name: ${NAME}
 method: random
 metric:
   name: best_val_acc
@@ -11,13 +10,13 @@ parameters:
   wandb_project:
     value: lincs-sweeps
   level:
-    value: lvl1
+    value: ${LEVEL}
   save_model:
     value: false
   max_steps:
-    value: 10000
+    value: ${MAX_STEPS}
   eval_every:
-    value: 1000
+    value: ${EVAL_EVERY}
   lr:
     distribution: log_uniform_values
     min: 0.000001
@@ -30,15 +29,16 @@ parameters:
     values: [1, 2, 3, 4, 5, 6, 7, 8]
   mlp_hidden_dim:
     values: [256, 512, 1024, 2048, 4096, 8192, 16384]
-run_cap: 25
+${FIXED}
+run_cap: 20
 early_terminate:
   type: hyperband
   min_iter: 3
   eta: 3
 command:
   - ${env}
-  - bash
-  - slurm/sweep_run.sh
+  - julia
+  - --threads=1,0
   - ${program}
-  - configs/baselines/emlp_z_lvl1.toml
+  - ${CONFIG}
   - ${args_no_hyphens}

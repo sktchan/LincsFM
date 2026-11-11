@@ -2,17 +2,22 @@
 
 struct Classifier{E<:Encoder,P,H}
     encoder::E
-    pool::P      # AttnPool, or nothing = mean pool
+    pool::P      # AttnPool, ClsToken, MaxPool, or nothing = mean pool
     head::H
 end
 Flux.@layer Classifier
 
 function Classifier(enc::Encoder, n_classes::Int; hidden_dim::Int = 128, drop_prob::Float64 = 0.18, pool::Symbol = :mean)
     D = embed_dim(enc)
-    pl = pool == :attn ? AttnPool(D) : pool == :mean ? nothing : error("pool must be mean or attn")
+    pl = pool == :attn ? AttnPool(D) : pool == :cls ? ClsToken(D) : pool == :max ? MaxPool() : pool == :mean ? nothing : error("pool must be mean, attn, cls or max")
     return Classifier(enc, pl, ft_head(D, hidden_dim, n_classes, drop_prob))
 end
 
+function features(m::Classifier{<:Encoder,<:ClsToken}, x)
+    t = tokens(m.encoder, x)
+    c = repeat(reshape(m.pool.vec, :, 1, 1), 1, 1, size(t, 3))
+    return run_layers(m.encoder, hcat(c, t))[:, 1, :]
+end
 function features(m::Classifier, x)
     h = encode(m.encoder, x)
     return isnothing(m.pool) ? meanpool(h) : m.pool(h)

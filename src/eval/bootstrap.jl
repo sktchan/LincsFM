@@ -1,10 +1,7 @@
-# drug-cluster paired bootstrap of test predictions: resample the test classes (compounds for lvl2) with replacement,
-# B = 2000, MersenneTwister(2026), one resample shared by every arm; arm table (acc, 95% CI, balanced acc) and contrast table
-# source = finetune run dir (predstrues.jld2, preds_final), <dir>#best / #final, or <file.jld2>#key (e.g. ldarefit_final.jld2#preds_pool)
-# contrast = [A, B] (A - B) or [A, B, C, D] ((A - B) - (C - D)); pt = true: |delta| < 0.07 is never "different" (1 pretrain seed)
+# drug-cluster paired bootstrap of test predictions: per-arm accuracy with 95% CIs and contrasts between arms
 
 const BOOT_DELTA = 0.03   # equivalence margin
-const BOOT_PT_MIN = 0.07
+const BOOT_PT_MIN = 0.07  # pretrain contrasts (one pretrain seed) below this are never called different
 
 function load_preds(src::AbstractString)
     path, key = occursin('#', src) ? String.(split(src, '#'; limit=2)) : (String(src), "preds_final")

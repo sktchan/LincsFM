@@ -1,0 +1,40 @@
+# logistic baseline random search over lr and weight decay; filled in by scripts/sweep.jl
+program: scripts/baseline.jl
+project: lincs-sweeps
+name: ${NAME}
+method: random
+metric:
+  name: best_val_acc
+  goal: maximize
+parameters:
+  wandb_project:
+    value: lincs-sweeps
+  level:
+    value: ${LEVEL}
+  save_model:
+    value: false
+  max_steps:
+    value: ${MAX_STEPS}
+  eval_every:
+    value: ${EVAL_EVERY}
+  lr:
+    distribution: log_uniform_values
+    min: 0.00001
+    max: 0.1
+  weight_decay:
+    distribution: log_uniform_values
+    min: 0.000001
+    max: 0.1
+${FIXED}
+run_cap: 20
+early_terminate:
+  type: hyperband
+  min_iter: 3
+  eta: 3
+command:
+  - ${env}
+  - julia
+  - --threads=1,0
+  - ${program}
+  - ${CONFIG}
+  - ${args_no_hyphens}

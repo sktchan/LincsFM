@@ -1,8 +1,5 @@
-# usage: julia scripts/baseline.jl <config.toml> [key=value ...]  (model = elog | rlog | emlp | rmlp | elda | rlda; trivial = true runs the trivial baselines for level)
-include(joinpath(@__DIR__, "setup.jl"))
-cfg = LincsFM.load_config(ARGS[1], LincsFM.parse_overrides(ARGS[2:end]))
-if get(cfg, "trivial", false)
-    LincsFM.trivial_baselines(cfg["level"]; results_dir=cfg["results_dir"])
-else
-    LincsFM.baseline(cfg)
-end
+# train a no-pretraining baseline, or the trivial label baselines, from a config
+using Pkg; Pkg.activate(joinpath(dirname(@__DIR__), "env", Sys.ARCH == :aarch64 ? "aarch64" : "x86_64"); io=devnull)
+using LincsFM
+cfg = LincsFM.cli_config(ARGS)
+get(cfg, "trivial", false) ? trivial_baselines(cfg["level"]; results_dir=cfg["results_dir"]) : baseline(cfg)

@@ -1,5 +1,4 @@
-# no-pretraining baselines on gene-level inputs: logistic regression, relu MLP, shrinkage LDA, trivial label lookups
-# models: e* = expression (optionally per-gene z-scored), r* = rank features; log = one linear layer, mlp = relu MLP, lda = shrinkage LDA
+# no-pretraining baselines: e* = expression, r* = rank features; log = logistic regression, mlp = relu MLP, lda = shrinkage LDA
 
 include("logistic.jl")
 include("mlp.jl")
@@ -10,15 +9,14 @@ _flag(x) = x isa Bool ? x : x != 0
 baseline_input_name(model::AbstractString) = model[1] == 'e' ? "etf" : model[1] == 'r' ? "rtf" : error("unknown baseline $model")
 baseline_name(cfg::Dict) = "$(cfg["model"])$(cfg["model"][1] == 'e' && _flag(get(cfg, "standardize", false)) ? "_z" : "")_$(cfg["level"])"
 
-# train / val / test inputs: rank features, or expression z-scored with train mean/sd and clipped to +-clip (0 = no clip)
+# train / val / test inputs: rank features, or expression z-scored per gene with the stored pretrain-train mean/sd (as ETF A) and clipped to +-clip (0 = no clip)
 function baseline_inputs(d::LincsData, idx, sp, model::AbstractString, cfg::Dict)
     X = d.X[:, idx]
     if model[1] == 'r'
         X = rank_features(gene_ranks(X, d.medians), X); info = "rank features"
     elseif _flag(get(cfg, "standardize", false))
         clip = Float32(get(cfg, "clip", 10))
-        mu = mean(X[:, sp.train], dims=2); sd = std(X[:, sp.train], dims=2); sd[sd .< 1f-6] .= 1f0
-        X = (X .- mu) ./ sd
+        X = (X .- d.gene_mean) ./ d.gene_sd
         frac = mean(abs.(X[:, sp.train]) .> clip)
         clip > 0 && (X = clamp.(X, -clip, clip))
         info = @sprintf("z-scored, clip %g (%.4f%% of train values)", clip, 100 * (clip > 0 ? frac : 0.0))

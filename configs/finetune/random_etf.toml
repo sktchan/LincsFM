@@ -1,12 +1,6 @@
-# random encoder (set ckpt=<pretrain run>/final), ETF: raw input, head_init
+# random encoder (T1), set ckpt=<pretrain run>/final
+base = "base.toml"
 input = "etf"
 mode = "random"
 head_init = true
 init_seed = 0
-level = "lvl2"
-lr = 0.00012
-drop_prob = 0.18
-gene_lr_mult = 978.0
-max_steps = 20000
-micro_bs = 0
-pool = "mean"

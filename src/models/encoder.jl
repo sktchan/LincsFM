@@ -1,5 +1,4 @@
-# encoder shared by ETF and RTF: token = value channel + gene channel (gene order, all G genes present)
-# ETF value = Dense(1 => D)(x_g); RTF value = rank table[r_g]; gene = gene table[g]; mask = vector that replaces a hidden channel
+# encoder shared by ETF and RTF: token = value channel (ETF Dense(1 => D), RTF rank table) + gene embedding; a mask vector replaces a hidden channel
 
 struct Encoder{V,E,M<:AbstractVector,O<:Flux.Dropout,T<:Flux.Chain,F}
     value::V
