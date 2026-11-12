@@ -1,4 +1,4 @@
-# finetune random search over lr and drop_prob; filled in by scripts/sweep.jl
+# finetune random search over lr and drop_prob; filled in by scripts/sweep.jl; no early stopping (every trial runs max_steps)
 program: scripts/finetune.jl
 project: lincs-sweeps
 name: ${NAME}
@@ -17,18 +17,14 @@ parameters:
     value: 1000
   lr:
     distribution: log_uniform_values
-    min: 0.00001
-    max: 0.002
+    min: 0.00003
+    max: 0.01
   drop_prob:
     distribution: uniform
     min: 0.0
     max: 0.3
 ${FIXED}
 run_cap: 20
-early_terminate:
-  type: hyperband
-  min_iter: 3
-  eta: 3
 command:
   - ${env}
   - julia

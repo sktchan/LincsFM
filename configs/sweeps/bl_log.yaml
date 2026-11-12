@@ -1,4 +1,4 @@
-# logistic baseline random search over lr and weight decay; filled in by scripts/sweep.jl
+# logistic baseline random search over lr and weight decay; filled in by scripts/sweep.jl; no early stopping (every trial runs max_steps)
 program: scripts/baseline.jl
 project: lincs-sweeps
 name: ${NAME}
@@ -27,10 +27,6 @@ parameters:
     max: 0.1
 ${FIXED}
 run_cap: 20
-early_terminate:
-  type: hyperband
-  min_iter: 3
-  eta: 3
 command:
   - ${env}
   - julia
