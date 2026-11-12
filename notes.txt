@@ -94,12 +94,15 @@
 
 -- running:
     -- how long each needs to run before learning?
+        -- DONE baselines; 40k for sweep and full at 300k
+        -- tbd transformers
     -- etf input
         -- RUNNING mean pooling fix:
             -- adding W*x/G into the pooled vector fixes scale but adds a linear model onto the raw input
             -- main issue for mean pooling is that in LINCS, every sample has all 978 genes in the same order
                 -- with a fixed panel, the mean of the input tokens is constant, so mean pooling has no information
                 -- this is only true at the input; after the first nonlinear layer then mean does differ between samples
+                -- honestly mean pooling wasn't terrible before?
             -- testing:
                 -- x10 lr
                     -- this sets the embeddings at 10x the lr, layers are at 1x the lr
@@ -110,15 +113,30 @@
                 -- cls token
                     -- theoretically should be mid
                     -- does way worse
+                -- RUNNING on tfs: x1 lr, x10 gene lr, x1 higher lr
+                    -- at the same time this is a transformer learning curve test w/ hyperband off!
         -- DONE input scaling
             -- A uses 1 stddev and 1 mean per gene; fixed rescaling of each gene
             -- B uses global stddev and global mean
             -- A is probably the most fair comparison; L1000 work usually does per gene z scoring beforehand
-            -- thus A used for both transformers and baselines
+            -- the thing is, A is probably a more fair comparison against rank?
+                -- since rank is gene-median normalized?
+                -- then shouldn't we also be gene-median normalizing the expression inputs?
+                -- no; going to keep raw expression inputs for transformers; this is what the literature does.
     -- DONE tests for pre/post LN vs head-init
         -- doing a pre LN then a final LN for pre-training, this is standard for ESM2 and is proven
         -- thus no tok-z; we have tok-norm for erecon and z-targets for lrecon tho
-    -- RUNNING mlp and logreg architecture re-sweep
+    -- DONE mlp and logreg architecture re-sweep; hyperband turned off
+    -- RUNNING no-pt tf learning curves; warmup also added to the first 1k steps
+        -- same time as the xlr tests
+    -- RUNNING lr grid for pre-training (full length)
+
+-- next:
+    -- no-pt tf sweeps
+    -- baselines + no-pt tf finals
+    -- pre-train learning curves?
+    -- pre-train finals (1 seed only)
+    -- w-pt tf ... etc.
 
 -- organizing:
     -- DONE consolidating per-arm config files over a shared base + sweep template
@@ -132,6 +150,7 @@
         -- new wandb needed?
             -- ensure only on for necessary sweeps and final runs for dashboard, separate projects
         -- no need for health, etc.?
+        -- simplify code
 
 -- later:
     -- label efficiency curves
@@ -145,3 +164,85 @@
     -- T1: honestly not sure if we need
     -- LDA probe: much later issue
     -- paired boostrapping
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 12 2026 ###
+
+-- overview:
+    -- pre-training RUNNING sweeps
+    -- fine-tuning 
+        -- baselines TBD finals
+        -- no-pt tfs RUNNING sweeps
+        -- w-pt tfs TBD
+
+-- running:
+    -- pre-training
+        -- RUNNING lr grid; 40k steps but no additional final run
+        -- not sweeping edge cases
+    -- fine-tuning
+        -- learning curves:
+            -- DONE baselines; 
+                -- lvl1: 10k plateau
+                -- lvl2: 40k for sweep and full at 300k
+            -- RUNNING transformers; 
+                -- lvl1: 
+                -- lvl2: 40k for sweep and full at 300k 
+        -- baselines:
+            -- mlp and logreg architectures re-sweep:
+                -- mlps: swept layers, width, lr, dropout
+                    -- should these be kept the same layers and width?? idk
+                    -- rn, lvl2 both have 16384 width
+        -- no/w-pt tf:  
+            -- mean pooling issue:
+                -- decided on 1x; keeping same as before since it just needs more time to learn
+                -- added tok-norm to no-pt ETF input tho; works better and matches pre-training input?
+            -- lvl1 settings all use the same
+        -- no-pt tf
+            -- RUNNING sweeps; decided on 40k steps only (may result in higher lr than best tho)
+
+-- next:
+    -- before running finetunes finals, start a new session
+    -- baselines + no-pt tf finals
+    -- w-pt tf sweeps + finals
+    -- trivial baselines?
+
+-- notes:
+    -- housekeeping
+        -- clean all of the results and logs
+        -- new wandb needed?
+            -- ensure only on for necessary sweeps and final runs for dashboard, separate projects
+        -- no need for health, etc.?
+        -- simplify code
+    -- sweeps
+        -- all use random search, 40k steps, n=20 trials, validation every 1k steps
+        -- baselines:
+            -- logreg:
+                -- lr: log uniform 1e-5 to 1e-1
+                -- decay: log uniform 1e-6 to 1e-1
+                -- fixed: 1 linear layer, adamW, batch 100, constant lr
+            -- mlp:
+                -- lr: log uniform 1e-6 to 1e-2
+                -- decay: log uniform 0.01 to 0.3
+                -- hidden layers: 1 to 8
+                -- width: 256 to 16384
+                -- fixed: relu, constant width, adamW, weight decay 0, batch 100, constant lr
+        -- tfs (lvl2 only):
+            -- lr: log uniform 3e-5 to 1e-2
+            -- dropout: uniform 0 to 0.3
+    -- currently the tfs are doing quite terribly; would want a deeper investigation as to why its not working well
+
+-- later:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests
+    -- once tahoe is setup, can clean the results/ in transformers/ etc.
+
+-- on hold:
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- edge extensions for pre-train sweeps
