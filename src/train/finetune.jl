@@ -27,15 +27,18 @@ function finetune(cfg::Dict; data::Union{Nothing,LincsData} = nothing)
     end
 
     Xtr, Xva, Xte = finetune_inputs(cfg, d, idx, sp)
+    # scratch encoder init scheme (default, or tok_norm as in erecon / lrecon pretraining, with the train input's global mean / sd)
+    if mode == "scratch" && get(cfg, "init", "default") != "default"
+        init_encoder!(enc, Symbol(cfg["init"]); seed, x_mean=Float64(mean(Xtr)), x_sd=Float64(std(Xtr)))
+    end
     ytr, yva, yte = y[sp.train], y[sp.val], y[sp.test]
-    model = Classifier(enc, C; hidden_dim=cfg["hidden_dim"], drop_prob=drop, pool=Symbol(get(cfg, "pool", "mean")))
+    model = Classifier(enc, C; hidden_dim=cfg["hidden_dim"], drop_prob=drop)
     model = to_device(model)
     hsd = get(cfg, "head_init", false) ? head_init!(model, batches(dev, Xtr[:, 1:min(5000, size(Xtr, 2))], bs)) : NaN
 
     opt = Flux.setup(Optimisers.AdamW(lr, (0.9, 0.999), Float64(get(cfg, "weight_decay", 0.0))), model)
-    # per-token tables reach the mean-pooled output at 1/G, so their lr is scaled (gene table; RTF rank table)
-    Optimisers.adjust!(opt.encoder.gene, lr * get(cfg, "gene_lr_mult", 1.0))
-    input isa RTF && Optimisers.adjust!(opt.encoder.value, lr * get(cfg, "rank_lr_mult", 1.0))
+    # lr x s (warmup)
+    lr_scale!(s) = Optimisers.adjust!(opt, lr * s)
 
     name = get(cfg, "run_name", obj_name == "none" ? "$(mode)_$(cfg["input"])_$(level)" : "$(mode)_$(obj_name)_$(cfg["input"])_$(level)")
     dir = run_dir(cfg, "finetune", name)
@@ -43,7 +46,7 @@ function finetune(cfg::Dict; data::Union{Nothing,LincsData} = nothing)
     @printf("finetune %s | %d classes | train %d val %d test %d | head_init dim-sd %.3g | dir %s\n",
             name, C, length(ytr), length(yva), length(yte), hsd, dir)
 
-    r = train_classifier!(model, opt, (m, x, t) -> _ft_grad(m, x, t, micro), (Xtr, ytr, Xva, yva, Xte, yte), cfg, C)
+    r = train_classifier!(model, opt, (m, x, t) -> _ft_grad(m, x, t, micro), (Xtr, ytr, Xva, yva, Xte, yte), cfg, C; lr_scale!)
     return save_classifier_run(dir, cfg, r, idx, sp, yte, names, (name = name, input = cfg["input"], mode = mode, objective = obj_name), hsd)
 end
 

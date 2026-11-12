@@ -2,5 +2,5 @@
 base = "base.toml"
 input = "etf"
 mode = "random"
-head_init = true
+head_init = false
 init_seed = 0

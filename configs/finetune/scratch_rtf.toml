@@ -1,5 +1,5 @@
-# no pretraining (T0), gene ranks
+# no pretraining (T0), gene ranks; encoder init tok_norm as in erecon / lrecon pretraining
 base = "base.toml"
 input = "rtf"
 mode = "scratch"
-rank_lr_mult = 978.0
+init = "tok_norm"

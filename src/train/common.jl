@@ -1,7 +1,7 @@
 # config, schedules and run directories shared by pretraining and finetuning
 
 const DEFAULTS = Dict{String,Any}(
-    "embed_dim" => 128, "hidden_dim" => 128, "n_heads" => 2, "n_layers" => 2, "norm" => "pre", "etf_scale" => "gene",
+    "embed_dim" => 128, "hidden_dim" => 128, "n_heads" => 2, "n_layers" => 2, "norm" => "pre_final", "etf_scale" => "raw",
     "batch_size" => 100, "seed" => 1, "wandb_project" => "", "wandb_group" => "", "results_dir" => joinpath(PKG_DIR, "results"),
     "data_path" => joinpath(PKG_DIR, "data", "lincs.jld2"))
 

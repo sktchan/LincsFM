@@ -1,7 +1,6 @@
-# random encoder (T1), set ckpt=<pretrain run>/final; no head_init (RTF pooled features are near constant)
+# random encoder (T1), set ckpt=<pretrain run>/final
 base = "base.toml"
 input = "rtf"
 mode = "random"
 head_init = false
 init_seed = 0
-rank_lr_mult = 978.0

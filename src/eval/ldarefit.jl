@@ -6,9 +6,8 @@ function classifier_from_state(st, input::Input, norm::AbstractString)
     D, G = size(se.gene.weight)
     enc = Encoder(input; n_genes=G, embed_dim=D, hidden_dim=size(l1.mlp.layers[1].weight, 1), n_heads=l1.mha.nheads,
                   n_layers=length(se.layers.layers), norm)
-    m = Classifier(enc, size(st.head.layers[end].weight, 1); hidden_dim=size(st.head.layers[1].weight, 1),
-                   pool=st.pool isa NamedTuple ? (haskey(st.pool, :vec) ? :cls : :attn) : st.pool == () ? :max : :mean)
-    Flux.loadmodel!(m, st)
+    m = Classifier(enc, size(st.head.layers[end].weight, 1); hidden_dim=size(st.head.layers[1].weight, 1))
+    Flux.loadmodel!(m, (encoder = st.encoder, head = st.head))
     return m
 end
 

@@ -1,8 +1,7 @@
-# shared by every finetune arm
+# shared by every finetune arm; lr / drop_prob / warmup are the untuned transformer defaults (lvl1 finals); lvl2 uses sweep winners
 level = "lvl2"
-lr = 0.00012
-drop_prob = 0.18
-gene_lr_mult = 978.0
+lr = 0.001
+warmup_steps = 1000
+drop_prob = 0.1
 max_steps = 20000
 micro_bs = 0
-pool = "mean"

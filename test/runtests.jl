@@ -18,7 +18,7 @@ end
 colnorms(A) = vec(sqrt.(sum(abs2, A; dims=1)))
 cosine(a, b) = dot(a, b) / (norm(a) * norm(b))
 
-tiny_encoder(input; G=40, D=16, seed=1) = (Random.seed!(seed); M.Encoder(input; n_genes=G, embed_dim=D, hidden_dim=16, n_heads=2, n_layers=2, drop_prob=0.1))
+tiny_encoder(input; G=40, D=16, seed=1, norm="pre_final") = (Random.seed!(seed); M.Encoder(input; n_genes=G, embed_dim=D, hidden_dim=16, n_heads=2, n_layers=2, drop_prob=0.1, norm))
 
 @testset "LincsFM" begin
 
@@ -28,7 +28,7 @@ tiny_encoder(input; G=40, D=16, seed=1) = (Random.seed!(seed); M.Encoder(input; 
     cfg = M.load_config(joinpath(M.PKG_DIR, "configs", "finetune", "scratch_rtf.toml"), o)
     @test cfg["lr"] == 0.001 && cfg["input"] == "rtf" && cfg["embed_dim"] == 128
     # base.toml keys come in under the arm's own keys, and base itself is dropped
-    @test cfg["max_steps"] == 20000 && cfg["rank_lr_mult"] == 978.0 && !haskey(cfg, "base")
+    @test cfg["max_steps"] == 20000 && !haskey(cfg, "gene_lr_mult") && cfg["norm"] == "pre_final" && cfg["etf_scale"] == "raw" && !haskey(cfg, "base")
     @test M.load_config(joinpath(M.PKG_DIR, "configs", "pretrain", "mlm_rtf.toml"))["max_val_samples"] == 5000
     # wandb sweeps pass True / False
     @test M.parse_overrides(["a=True", "b=False"]) == Dict("a" => true, "b" => false)
@@ -186,15 +186,29 @@ end
 @testset "classifier forward" begin
     G, B, C = 40, 5, 7
     X = rand(MersenneTwister(7), Float32, G, B) .* 8; med = fill(4f0, G)
-    for input in (M.ETF(), M.RTF()), pool in (:mean, :attn, :cls, :max)
-        m = M.Classifier(tiny_encoder(input; G), C; hidden_dim=16, pool)
+    for input in (M.ETF(), M.RTF())
+        m = M.Classifier(tiny_encoder(input; G), C; hidden_dim=16)
         x = M.encode_input(input, X, med)
         y = m(x)
         @test size(y) == (C, B) && all(isfinite, y)
         g = Flux.gradient(mm -> sum(mm(x)), m)[1]
         @test all(isfinite, g.encoder.gene.weight)
-        pool == :cls && @test any(!iszero, g.pool.vec)
     end
+end
+
+@testset "warmup schedule" begin
+    rng = MersenneTwister(3); C = 3
+    X = rand(rng, Float32, 5, 60); y = rand(rng, 1:C, 60)
+    m = Flux.Chain(Flux.Dense(5 => C)); opt = Flux.setup(Flux.Adam(1e-3), m)
+    scales = Float64[]
+    cfg = Dict{String,Any}("batch_size" => 8, "max_steps" => 30, "level" => "lvl2", "eval_every" => 10, "warmup_steps" => 10)
+    gr(mm, x, t) = (r = Flux.withgradient(q -> Flux.logitcrossentropy(q(x), t), mm); (r.val, r.grad[1]))
+    r = M.train_classifier!(m, opt, gr, (X, y, X, y, X, y), cfg, C; lr_scale! = s -> push!(scales, s))
+    @test r.steps == 30 && length(r.curve) == 3
+    @test scales ≈ [k / 10 for k in 1:10] && scales[end] == 1.0
+    sc2 = Float64[]
+    M.train_classifier!(m, opt, gr, (X, y, X, y, X, y), cfg, C)
+    @test isempty(sc2)
 end
 
 @testset "checkpoint round trip" begin

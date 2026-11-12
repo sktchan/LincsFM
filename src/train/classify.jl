@@ -27,9 +27,12 @@ end
 
 # grad(model, x, y) -> (loss, gradient); lvl2 samples class-balanced (uniform class, then uniform sample), lvl1 walks shuffled epochs
 # eval_every (steps, default one epoch); best = highest val acc, ties by lower val loss; always runs max_steps
-function train_classifier!(model, opt, grad, data, cfg::Dict, C::Int)
+# lr_scale!(s) sets every lr to s x its base value; with it, cfg warmup_steps gives a linear warmup then a constant lr
+function train_classifier!(model, opt, grad, data, cfg::Dict, C::Int; lr_scale! = nothing)
     Xtr, ytr, Xva, yva, Xte, yte = data
     bs = cfg["batch_size"]; total = cfg["max_steps"]; level = cfg["level"]
+    wu = isnothing(lr_scale!) ? 0 : Int(get(cfg, "warmup_steps", 0))
+    wu > 0 && lr_scale!(1 / wu)
     bpe = div(length(ytr), bs); eval_every = get(cfg, "eval_every", bpe)
     cidx = Dict{Int,Vector{Int}}(); for (i, c) in enumerate(ytr); push!(get!(cidx, c, Int[]), i); end
     classes = collect(keys(cidx))
@@ -48,6 +51,7 @@ function train_classifier!(model, opt, grad, data, cfg::Dict, C::Int)
         l, g = grad(model, dev(Xtr[:, b]), dev(Flux.onehotbatch(ytr[b], 1:C)))
         Flux.update!(opt, model, g)
         push!(losses, l); step += 1
+        wu > 0 && step < wu && lr_scale!((step + 1) / wu)
         (step % eval_every == 0 || step == total) || continue
         vl, va, _ = evaluate_classifier(model, Xva, yva, C, bs)
         ep = step / bpe

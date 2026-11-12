@@ -1,5 +1,6 @@
-# no pretraining (T0), per-gene z-scored input
+# no pretraining (T0), raw continuous expression input; encoder init tok_norm as in erecon / lrecon pretraining
 base = "base.toml"
 input = "etf"
 mode = "scratch"
-etf_scale = "gene"
+etf_scale = "raw"
+init = "tok_norm"
