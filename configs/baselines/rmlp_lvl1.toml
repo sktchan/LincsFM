@@ -1,8 +1,9 @@
-# tapered relu MLP on rank features, sweep bddu4rvg best
+# constant-width relu MLP on rank features, sweep dh560qmn best (0ekmelby); final length 20k
 model = "rmlp"
 level = "lvl1"
-lr = 0.00028059
-drop_prob = 0.2548
+lr = 2.2e-5
+drop_prob = 0.053
 n_layers = 2
-mlp_hidden_dim = 0
-max_steps = 40000
+mlp_hidden_dim = 4096
+max_steps = 20000
+eval_every = 1000

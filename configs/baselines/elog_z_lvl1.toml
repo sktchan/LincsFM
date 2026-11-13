@@ -1,7 +1,9 @@
-# logistic regression on per-gene z-scored expression (clip +-10), hard-coded lr as the old elog.jl
+# logistic regression on per-gene z-scored expression (clip +-10), sweep odxtefp8 best (t9wm1t65); final length 20k
 model = "elog"
 level = "lvl1"
 standardize = true
 clip = 10
-lr = 0.001
-max_steps = 40000
+lr = 3.6e-4
+weight_decay = 2.1e-4
+max_steps = 20000
+eval_every = 1000

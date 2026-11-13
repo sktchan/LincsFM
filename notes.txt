@@ -246,3 +246,66 @@
     -- paired boostrapping
     -- mlps and logreg w/ same # parameters as tfs
     -- edge extensions for pre-train sweeps
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 13 2026 ###
+
+-- overview:
+    -- pre-training DONE
+    -- fine-tuning 
+        -- baselines TBD finals
+        -- no-pt tfs TBD finals
+        -- w-pt tfs RUNNING sweeps
+
+-- running:
+    -- pre-training
+        -- DONE lr grid; 40k steps, most are in middle of grid
+    -- fine-tuning
+        -- learning curves:
+            -- DONE transformers; 
+                -- lvl1: 20k, final only (does not subtract -40k steps from the pre-train tho)
+                -- lvl2: 40k for sweep and full at 300k 
+        -- baselines:
+            -- TBD finals
+        -- no-pt tf
+            -- DONE sweeps; decided on 40k steps only (may result in higher lr than best tho)
+            -- TBD finals
+        -- w-pt tf:
+            -- RUNNING sweeps; 40k steps eta Nov 15
+
+-- next:
+    -- baselines + no-pt tf finals
+    -- w-pt tf finals
+    -- trivial baselines
+
+-- notes:
+    -- housekeeping:
+        -- DONE re-organized wandb; into lincs lvl1 vs. lvl2 vs. sweeps
+        -- DONE check if theres actually a need for health:
+            -- health check already exists in the pre-train; no need for the wrapper
+            -- keeping probe, lda, and eval in src/eval/
+                -- can remove these later if deciding not to use
+    -- after tahoe is setup:
+        -- clean all of the results and logs 
+        -- simplify code
+    -- currently the tfs are doing quite terribly; would want a deeper investigation as to why its not working well
+    -- is mlp sweep ok?
+        -- should it have been kept same layers and same width?
+        -- rn, lvl2 both have 16384 width
+        -- is this too many parameters?
+
+-- later:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests + ceiling/floor
+    -- once tahoe is setup, can clean the results/ in transformers/ etc.
+
+-- on hold:
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- edge extensions for pre-train sweeps

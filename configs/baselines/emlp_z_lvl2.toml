@@ -1,10 +1,10 @@
-# constant-width relu MLP on z-scored expression, hps of the Oct 6 emlp_zc finals (sweep hfkya8nk); lincs.toml block: lr 1.4e-5, drop 0.037, 5 x 8192
+# constant-width relu MLP on z-scored expression (clip +-10), sweep egws2du8 best (0xegjp6v); final length 300k
 model = "emlp"
 level = "lvl2"
 standardize = true
 clip = 10
-lr = 5.1e-5
-drop_prob = 0.064
-n_layers = 4
+lr = 1.8e-5
+drop_prob = 0.078
+n_layers = 3
 mlp_hidden_dim = 16384
-max_steps = 200000
+max_steps = 300000

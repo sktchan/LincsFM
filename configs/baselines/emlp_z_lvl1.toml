@@ -1,10 +1,11 @@
-# tapered relu MLP on z-scored expression, sweep zhkn9kmk best
+# constant-width relu MLP on z-scored expression (clip +-10), sweep 3r3k9660 best (cbo6px8c); final length 20k
 model = "emlp"
 level = "lvl1"
 standardize = true
 clip = 10
-lr = 4.7367e-5
-drop_prob = 0.08279
-n_layers = 2
-mlp_hidden_dim = 0
-max_steps = 40000
+lr = 7.4e-5
+drop_prob = 0.063
+n_layers = 1
+mlp_hidden_dim = 2048
+max_steps = 20000
+eval_every = 1000

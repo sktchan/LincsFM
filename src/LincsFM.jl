@@ -35,6 +35,6 @@ export Input, ETF, RTF, parse_input, gene_ranks, rank_features
 export Encoder, Classifier, MLM, ERecon, LRecon, objective_from
 export pretrain, finetune, load_config, load_encoder
 export baseline, lda_baseline, trivial_baselines
-export run_probe, run_health, run_ldarefit, run_bootstrap
+export run_probe, run_health, run_bootstrap
 
 end

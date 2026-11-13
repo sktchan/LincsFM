@@ -1,6 +1,6 @@
 # finetune random search over lr and drop_prob; filled in by scripts/sweep.jl; no early stopping (every trial runs max_steps)
 program: scripts/finetune.jl
-project: lincs-sweeps
+project: ${PROJECT}
 name: ${NAME}
 method: random
 metric:
@@ -8,7 +8,7 @@ metric:
   goal: maximize
 parameters:
   wandb_project:
-    value: lincs-sweeps
+    value: ${PROJECT}
   level:
     value: ${LEVEL}
   max_steps:

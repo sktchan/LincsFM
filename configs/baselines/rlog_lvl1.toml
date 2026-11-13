@@ -1,5 +1,7 @@
-# logistic regression on rank features
+# logistic regression on rank features, sweep 5rdz9qm7 best (z2o4y2hz); final length 20k
 model = "rlog"
 level = "lvl1"
-lr = 0.001
-max_steps = 40000
+lr = 1.3e-3
+weight_decay = 2.4e-5
+max_steps = 20000
+eval_every = 1000

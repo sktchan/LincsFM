@@ -1,6 +1,6 @@
 # mlp baseline random search over lr, dropout, depth and width; filled in by scripts/sweep.jl; no early stopping (every trial runs max_steps)
 program: scripts/baseline.jl
-project: lincs-sweeps
+project: ${PROJECT}
 name: ${NAME}
 method: random
 metric:
@@ -8,7 +8,7 @@ metric:
   goal: maximize
 parameters:
   wandb_project:
-    value: lincs-sweeps
+    value: ${PROJECT}
   level:
     value: ${LEVEL}
   save_model:

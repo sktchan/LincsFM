@@ -1,8 +1,8 @@
-# constant-width relu MLP on rank features, sweep lpm1bnse best
+# constant-width relu MLP on rank features, sweep o6utlcen best (3d0dist0); final length 300k
 model = "rmlp"
 level = "lvl2"
-lr = 9.5e-5
-drop_prob = 0.015
-n_layers = 3
-mlp_hidden_dim = 8192
-max_steps = 200000
+lr = 4.9e-5
+drop_prob = 0.22
+n_layers = 5
+mlp_hidden_dim = 16384
+max_steps = 300000

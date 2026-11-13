@@ -1,5 +1,6 @@
-# logistic regression on rank features, fixed length, best val checkpoint
+# logistic regression on rank features, sweep ir5xycw2 best (yx8bp89i); final length 300k
 model = "rlog"
 level = "lvl2"
-lr = 0.001
-max_steps = 200000
+lr = 1.6e-3
+weight_decay = 1.1e-4
+max_steps = 300000
