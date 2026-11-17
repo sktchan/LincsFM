@@ -300,7 +300,6 @@
     -- top k accuracies
     -- ablations
         -- one arm scaled up architecture
-    -- lvl3 tests + ceiling/floor
     -- once tahoe is setup, can clean the results/ in transformers/ etc.
 
 -- on hold:
@@ -309,3 +308,104 @@
     -- paired boostrapping
     -- mlps and logreg w/ same # parameters as tfs
     -- edge extensions for pre-train sweeps
+
+-- lvl3:
+    -- 1. set min. coverage/stability of cl
+        -- focusing on 24h dose; plate w/ >=2 DMSO wells for the control mean, >=1 cmpd-trt well passing QC
+            -- leaves only 166 cell lines
+                -- further differs in coverage in 3 ways:
+                    -- 21 cl w/ >979 drug groups, >29 replicate plates, 14 tissues
+                    -- 25 cl w/ ~715 drug groups, 6 replicate plates (each condition measured only once), 16 tissues
+                    -- 120 cl w/ <414 drug groups, few replicate plates
+            -- max here is 11k drug groups and 378k conditions
+        -- measuring via:
+            -- repeat agreement: for a condition measured on several independent plates, split into 2 halves and correlate the halves' deltas
+            -- response/noise: how much a trt differs from plate DMSO mean, relative to how much DMSO wells differ from one another
+            -- then take the 10th percentile of each for the 21 cl
+            -- then the 25 cl is also filtered by the 10th percentile of the 21
+        -- lea's did all doses, all times, and one pearson per observation and dropped all noisy conditions from training (not noisy cl)
+    -- 2. select ref/target based off of screening the full matrix; reliably difficult cases w/ biological background in mind
+        -- every cl is a reference, tested to predict every other cl that shares enough drugs w/ it (500 conditions, 200 drug groups)
+            -- predict unseen line w/ unseen drug
+            -- target lines are 5 groups of diff tissues
+            -- same split for each reference
+            -- each group is held out once, w/ 5 diff drug splits
+            -- thus each reference -> target pair gets 5 scores (5 drug splits)
+        -- reference --> target is reliably difficult if:
+            -- gap is in the bottom 10% of references and seeds
+            -- holds even after resampling targets/drug groups
+    -- can consider adding 6h if too easy/hard?
+    -- screen A: 21 cl
+        -- reference: THP1 (blood)
+        -- pairs: 12 potential, all between 0.025-0.058
+            -- for all, MSE is within 2% of predicting the training mean, so maybe no predictable signal?
+            -- ASC, NPC, PC3, HEK293, and THP1 are hard targets for every reference
+        -- same-tissue makes no difference
+        -- ridge barely beats training mean; in every case a replicate predicts better than ridge
+        -- so technically i think we can run w it!
+        -- need graphs for seb tho
+    -- screen B: 21 + 25 cl
+        -- 
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 15 2026 ###
+
+-- overview:
+    -- pre-training DONE
+    -- fine-tuning 
+        -- baselines RUNNING finals
+        -- no-pt tfs TBD finals
+        -- w-pt tfs TBD finals
+
+-- running:
+    -- fine-tuning
+        -- learning curves:
+            -- RUNNING w-pt transformers (checking convergence for 300k steps)
+        -- baselines:
+            -- RUNNING finals for lvl2, ETA tues night/wed morn
+        -- no-pt tf
+            -- TBD finals
+        -- w-pt tf:
+            -- DONE sweeps; all at around ish the same validation accuracy w/ erecon rtf doing best?
+            -- TBD finals
+
+-- next:
+    -- no-pt tf finals
+    -- w-pt tf finals
+    -- trivial baselines
+
+-- notes:
+    -- after tahoe is setup:
+        -- clean all of the results and logs 
+        -- simplify code
+    -- currently the tfs are doing quite terribly; would want a deeper investigation as to why its not working well
+    -- is mlp sweep ok?
+        -- should it have been kept same layers and same width?
+        -- rn, lvl2 both have 16384 width
+        -- is this too many parameters?
+
+-- later:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- once tahoe is setup, can clean the results/ in transformers/ etc.
+
+-- on hold:
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- edge extensions for pre-train sweeps
+
+-- lvl3:
+    -- 1. set min. coverage/stability of cl
+    -- 2. select ref/target based off of screening the full matrix; reliably difficult cases w/ biological background in mind
+    -- screen A: 21 cl
+        -- reference: THP1 (blood)
+        -- pairs: 12 potential, all between 0.025-0.058
+            -- ASC, NPC, PC3, HEK293, and THP1 are hard targets for every reference
+    -- can consider adding 6h if too easy/hard?
+    -- screen B unessecary 
+    -- re-doing w/ leave 1 target out instead, also lin reg? ridge reg usually chooses same alpha
