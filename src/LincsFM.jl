@@ -29,6 +29,7 @@ include("train/finetune.jl")
 include("log.jl")
 include("eval/eval.jl")
 include("baselines/baselines.jl")
+include("tasks/seen.jl")
 
 export LincsData, load_data, labels, pretrain_split, finetune_split
 export Input, ETF, RTF, parse_input, gene_ranks, rank_features
@@ -36,5 +37,6 @@ export Encoder, Classifier, MLM, ERecon, LRecon, objective_from
 export pretrain, finetune, load_config, load_encoder
 export baseline, lda_baseline, trivial_baselines
 export run_probe, run_health, run_bootstrap
+export SeenTask, load_seen_task, seen_split, well_inputs, predict_conditions, score_seen, seen_linear_baselines, seen_drug_ceiling
 
 end

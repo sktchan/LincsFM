@@ -409,3 +409,214 @@
     -- can consider adding 6h if too easy/hard?
     -- screen B unessecary 
     -- re-doing w/ leave 1 target out instead, also lin reg? ridge reg usually chooses same alpha
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 18 2026 ###
+
+-- overview:
+    -- pre-training DONE
+    -- fine-tuning 
+        -- baselines DONE finals
+        -- no-pt tfs RUNNING finals
+        -- w-pt tfs TBD finals
+
+-- running:
+    -- fine-tuning
+        -- learning curves:
+            -- DONE all
+        -- baselines:
+            -- DONE finals for lvl2; emlp ~ rmlp > elog ~ rlog
+        -- no-pt tf
+            -- RUNNING finals, tbd thurs morn (30k steps)
+        -- w-pt tf:
+            -- TBD finals, planned for 260k steps
+        -- TBD lvl1 all
+
+-- next:
+    -- w-pt tf finals
+    -- trivial baselines
+    -- analyses
+
+-- notes:
+    -- after tahoe is setup:
+        -- clean all of the results and logs 
+        -- simplify code
+    -- currently the tfs are doing quite terribly; would want a deeper investigation as to why its not working well
+    -- is mlp sweep ok?
+        -- should it have been kept same layers and same width?
+        -- rn, lvl2 both have 16384 width
+        -- is this too many parameters?
+    -- also RUNNING a quick check on whether regular data2vec worked on lincs
+
+-- later:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- once tahoe is setup, can clean the results/ in transformers/ etc.
+
+-- on hold:
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- edge extensions for pre-train sweeps
+
+-- lvl3:
+    -- discussion w/ seb:
+        -- score per gene instead of per profile
+            -- each row = 1 test sample (target line x compound x single dose); each column = 1/978 genes
+            -- thus, gene's overall expression doesn't necessairly drive the score
+        -- predict the treated target profile, not the delta
+            -- subtraction may make results look worse than they really are
+        -- maybe:
+            -- compare loss is sufficient for deciding if two diff approaches are better than one another
+            -- use ID embeddings instead of DMSO inputs
+                -- because DMSO mixes cell line and plate bias; better to give model a CL embedding and a plate embedding
+                -- can then drop the reference DMSO since this is a constant
+                -- thus: ref_trt -> tgt_trt ??
+                -- this would need a target cl embedding, which would mean seen target, unseen drug
+        -- careful w/ reproducibility as a quality measure; 
+            -- not sure if there's a clean link between repro/predictability
+    -- ok so plan:
+        -- input: reference treated profile + target embedding + plate embedding
+        -- output: target treated profile
+        -- split: held out drugs
+        -- baseline floor: each target's average treated profile
+        -- scoring: per-gene pearson across test drugs within each target
+        -- baseline ceiling: per-gene corerlation between two halves of replicate wells
+    -- TESTING: all references vs. all targets 
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 19 2026 ###
+
+-- overview:
+    -- pre-training DONE
+    -- fine-tuning 
+        -- baselines DONE finals
+        -- no-pt tfs DONE finals
+        -- w-pt tfs RUNNING finals
+
+-- running:
+    -- fine-tuning
+        -- learning curves:
+            -- DONE all
+        -- baselines:
+            -- DONE finals for lvl2; emlp ~ rmlp > elog ~ rlog
+        -- no-pt tf
+            -- DONE finals; ETF > RTF by ~0.05
+        -- w-pt tf:
+            -- RUNNING finals; 260k steps, ETA saturday
+        -- TBD lvl1 all
+
+-- next:
+    -- w-pt tf finals
+    -- trivial baselines
+    -- analyses
+
+-- notes:
+    -- after tahoe is setup:
+        -- clean all of the results and logs 
+        -- simplify code
+    -- currently the tfs are doing quite terribly; would want a deeper investigation as to why its not working well
+    -- is mlp sweep ok?
+        -- should it have been kept same layers and same width?
+        -- rn, lvl2 both have 16384 width
+        -- is this too many parameters?
+    -- also RUNNING a quick check on whether regular data2vec worked on lincs
+
+-- later:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- once tahoe is setup, can clean the results/ in transformers/ etc.
+
+-- on hold:
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- edge extensions for pre-train sweeps
+
+-- lvl3:
+    -- DONE: all references vs. all targets @ results/lincs_seen_v1/figures/
+        -- ceiling: 0.59-0.7
+            -- remove avg of training wells on that plate, then split replicates and correlate halves
+        -- ridge: 0.68-0.74 on raw per-gene r, 0.16-0.3 on drug-specific
+            -- wherein drug-specific is model prediction - baseline prediction (baseline is avg of training wells on the same plate for that target)
+            -- genes that replicate well are easier to predict but ridge sucks across all, not just hard genes
+        -- linear: 0.26-0.71 on raw per-gene r, 0.052-0.224 on drug-specific
+    -- best is NPC and THP1; 16 targets each 
+        -- NPC: drug rr: 0.164, drug ceiling: 0.619; 200 test drugs per target
+        -- THP1: drug rr: 0.223, drug ceiling: 0.676; 110 test drugs per target
+    -- let's do NPC! one shared model across all 16 targets.
+    -- need to decide on baseline being lin reg or ridge reg tho
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 20 2026 ###
+
+-- overview:
+    -- pre-training DONE
+    -- fine-tuning 
+        -- baselines DONE finals
+        -- no-pt tfs DONE finals
+        -- w-pt tfs RUNNING finals
+
+-- running:
+    -- fine-tuning
+        -- learning curves:
+            -- DONE all
+        -- baselines:
+            -- DONE finals for lvl2; emlp ~ rmlp > elog ~ rlog
+        -- no-pt tf
+            -- DONE finals; ETF > RTF by ~0.05
+        -- w-pt tf:
+            -- RUNNING finals; 260k steps, ETA saturday
+        -- RUNNING lvl1 all, ETA saturday
+
+-- next:
+    -- trivial baselines
+    -- analyses
+
+-- notes:
+    -- after tahoe is setup:
+        -- clean all of the results and logs 
+        -- simplify code
+    -- currently the tfs are doing quite terribly; would want a deeper investigation as to why its not working well
+    -- is mlp sweep ok?
+        -- should it have been kept same layers and same width?
+        -- rn, lvl2 both have 16384 width
+        -- is this too many parameters?
+    -- also RUNNING a quick check on whether regular data2vec worked on lincs
+
+-- later:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- once tahoe is setup, can clean the results/ in transformers/ etc.
+
+-- on hold:
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- edge extensions for pre-train sweeps
+
+-- lvl3:
+    -- DONE: all references vs. all targets @ results/lincs_seen_v1/figures/
+        -- ceiling: 0.59-0.7
+            -- remove avg of training wells on that plate, then split replicates and correlate halves
+        -- ridge: 0.68-0.74 on raw per-gene r, 0.16-0.3 on drug-specific
+            -- wherein drug-specific is model prediction - baseline prediction (baseline is avg of training wells on the same plate for that target)
+            -- genes that replicate well are easier to predict but ridge sucks across all, not just hard genes
+        -- linear: 0.26-0.71 on raw per-gene r, 0.052-0.224 on drug-specific
+    -- best is NPC and THP1; 16 targets each 
+        -- NPC: drug rr: 0.164, drug ceiling: 0.619; 200 test drugs per target
+        -- THP1: drug rr: 0.223, drug ceiling: 0.676; 110 test drugs per target
+    -- let's do NPC! one shared model across all 16 targets.
+    -- need to decide on baseline being lin reg or ridge reg tho
